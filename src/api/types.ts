@@ -28,3 +28,23 @@ export type ShopWithStatsDto = ShopDto & {
   users: number;
   appointments: number;
 };
+
+export type DomainCheckResult = {
+  domain: string;
+  kind: 'default' | 'custom';
+  dns: {
+    ips: string[];
+    expectedIps: string[];
+    pointsToServer: boolean | null;
+  };
+  https: {
+    ok: boolean;
+    status: number | null;
+    error: string | null;
+  };
+};
+
+export type DomainCheckDto = {
+  active: boolean;
+  results: DomainCheckResult[];
+};

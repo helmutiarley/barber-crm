@@ -3,7 +3,8 @@ import { BButton, BCard, BEmptyState, BInput, BLabel, BText, useBToast } from '@
 import { useQuery, useQueryClient } from '@tanstack/vue-query';
 import { computed, ref, watch } from 'vue';
 import { RouterLink, useRoute } from 'vue-router';
-import { getShop, updateShop } from '@/api/shops';
+import { checkShopDomains, getShop, updateShop } from '@/api/shops';
+import type { DomainCheckDto } from '@/api/types';
 import PageLayout from '@/components/PageLayout.vue';
 import { ApiError, messageForApiError } from '@/lib/errors';
 
@@ -21,6 +22,8 @@ const { data: shop, isPending, isError } = useQuery({
 const customDomain = ref('');
 const domainPending = ref(false);
 const togglePending = ref(false);
+const checkPending = ref(false);
+const domainCheck = ref<DomainCheckDto | null>(null);
 
 const currentAddress = computed(() =>
   shop.value ? (shop.value.customDomain ?? shop.value.domain) : '',
@@ -52,6 +55,26 @@ async function onSaveDomain(): Promise<void> {
   } finally {
     domainPending.value = false;
   }
+}
+
+async function onCheckDomains(): Promise<void> {
+  checkPending.value = true;
+  try {
+    domainCheck.value = await checkShopDomains(shopId.value);
+  } catch (error) {
+    const message =
+      error instanceof ApiError ? messageForApiError(error) : 'Não foi possível verificar.';
+    toast.add({ message, severity: 'failure' });
+  } finally {
+    checkPending.value = false;
+  }
+}
+
+function dnsLabel(pointsToServer: boolean | null, ips: string[]): string {
+  if (pointsToServer === true) return 'DNS aponta para o servidor';
+  if (pointsToServer === false) return `DNS aponta para outro lugar (${ips.join(', ')})`;
+  if (ips.length === 0) return 'DNS não resolve';
+  return `DNS resolve para ${ips.join(', ')}`;
 }
 
 async function onToggleActive(): Promise<void> {
@@ -132,6 +155,66 @@ function formatDate(iso: string): string {
             {{ currentAddress }}
           </a>
         </BText>
+
+        <div class="detail__check">
+          <BButton
+            color="neutral"
+            variant="outline"
+            :is-loading="checkPending"
+            :is-disabled="checkPending"
+            @click="onCheckDomains"
+          >
+            Verificar domínios e SSL
+          </BButton>
+          <BText v-if="checkPending" as="p" variant="body-3" color="b-fg-neutral-secondary">
+            Verificando DNS e HTTPS — isso também dispara a emissão do certificado.
+          </BText>
+        </div>
+
+        <div v-if="domainCheck" class="detail__check-results">
+          <div
+            v-for="result in domainCheck.results"
+            :key="result.domain"
+            class="detail__check-result"
+          >
+            <div class="detail__check-domain">
+              <BText as="span" variant="body-2-bold">{{ result.domain }}</BText>
+              <BText as="span" variant="body-3" color="b-fg-neutral-secondary">
+                {{ result.kind === 'custom' ? 'domínio próprio' : 'domínio padrão' }}
+              </BText>
+            </div>
+            <div class="detail__check-rows">
+              <div class="detail__check-row">
+                <BLabel :color="result.dns.pointsToServer === false ? 'danger' : result.dns.ips.length ? 'success' : 'danger'">
+                  {{ result.dns.ips.length ? 'DNS' : 'DNS ausente' }}
+                </BLabel>
+                <BText as="span" variant="body-3">
+                  {{ dnsLabel(result.dns.pointsToServer, result.dns.ips) }}
+                </BText>
+              </div>
+              <div class="detail__check-row">
+                <BLabel :color="result.https.ok ? 'success' : 'danger'">HTTPS</BLabel>
+                <BText as="span" variant="body-3">
+                  {{
+                    result.https.ok
+                      ? 'Certificado válido e site respondendo'
+                      : result.https.error
+                        ? `Falhou: ${result.https.error}`
+                        : `Respondeu com status ${result.https.status}`
+                  }}
+                </BText>
+              </div>
+            </div>
+          </div>
+          <BText
+            v-if="!domainCheck.active"
+            as="p"
+            variant="body-3"
+            color="b-fg-danger-default"
+          >
+            A barbearia está suspensa: certificados não serão emitidos enquanto ela estiver inativa.
+          </BText>
+        </div>
       </BCard>
 
       <BCard>
@@ -186,6 +269,41 @@ function formatDate(iso: string): string {
 
 .detail__danger-text {
   margin-bottom: var(--b-spacing-sm);
+}
+
+.detail__check {
+  display: flex;
+  align-items: center;
+  gap: var(--b-spacing-sm);
+  margin-top: var(--b-spacing-sm);
+}
+
+.detail__check-results {
+  display: flex;
+  flex-direction: column;
+  gap: var(--b-spacing-sm);
+  margin-top: var(--b-spacing-sm);
+  padding-top: var(--b-spacing-sm);
+  border-top: 1px solid var(--b-border-neutral-subtle, #e5e7eb);
+}
+
+.detail__check-domain {
+  display: flex;
+  align-items: baseline;
+  gap: var(--b-spacing-xs);
+  margin-bottom: var(--b-spacing-3xs);
+}
+
+.detail__check-rows {
+  display: flex;
+  flex-direction: column;
+  gap: var(--b-spacing-3xs);
+}
+
+.detail__check-row {
+  display: flex;
+  align-items: center;
+  gap: var(--b-spacing-xs);
 }
 
 .detail__link {
