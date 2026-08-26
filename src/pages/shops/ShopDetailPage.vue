@@ -103,27 +103,15 @@ async function onDelete(): Promise<void> {
   if (!shop.value) return;
 
   const confirmed = window.confirm(
-    `Excluir "${shop.value.name}"? O domínio sai do ar, o DNS é removido do Cloudflare e o slug fica livre para reuso. Os dados são mantidos no banco.`,
+    `Excluir "${shop.value.name}"? O domínio sai do ar e o slug fica livre para reuso. Os dados são mantidos no banco.`,
   );
   if (!confirmed) return;
 
   deletePending.value = true;
   try {
-    const deleted = await deleteShop(shopId.value);
+    await deleteShop(shopId.value);
     await queryClient.invalidateQueries({ queryKey: ['shops'] });
-
-    if (deleted.dnsRecord === 'deleted' || deleted.dnsRecord === 'missing') {
-      toast.add({ message: 'Barbearia excluída e DNS removido.', severity: 'success' });
-    } else if (deleted.dnsRecord === 'failed') {
-      toast.add({ message: 'Barbearia excluída.', severity: 'success' });
-      toast.add({
-        message: `Não foi possível remover o DNS de ${deleted.domain}. Remova o registro manualmente no Cloudflare.`,
-        severity: 'warning',
-      });
-    } else {
-      toast.add({ message: 'Barbearia excluída.', severity: 'success' });
-    }
-
+    toast.add({ message: 'Barbearia excluída.', severity: 'success' });
     await router.push('/shops');
   } catch (error) {
     const message =
@@ -279,8 +267,8 @@ function formatDate(iso: string): string {
       <BCard>
         <BText as="h2" variant="heading-3" class="detail__section-title">Excluir</BText>
         <BText as="p" variant="body-2" color="b-fg-neutral-secondary" class="detail__danger-text">
-          Excluir tira o domínio do ar, remove o registro DNS do Cloudflare e libera o slug para
-          reuso. Os dados são mantidos no banco, mas a barbearia some do CRM.
+          Excluir tira o domínio do ar e libera o slug para reuso. Os dados são mantidos no banco,
+          mas a barbearia some do CRM.
         </BText>
         <BButton
           color="danger"
