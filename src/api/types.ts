@@ -35,6 +35,12 @@ export type CreatedShopDto = ShopDto & {
   dnsRecord: DnsRecordStatus;
 };
 
+export type DnsDeleteStatus = 'deleted' | 'missing' | 'failed' | 'skipped';
+
+export type DeletedShopDto = ShopDto & {
+  dnsRecord: DnsDeleteStatus;
+};
+
 export type DomainCheckResult = {
   domain: string;
   kind: 'default' | 'custom';

@@ -2,13 +2,14 @@
 import { BButton, BCard, BEmptyState, BInput, BLabel, BText, useBToast } from '@barber/bcomponents';
 import { useQuery, useQueryClient } from '@tanstack/vue-query';
 import { computed, ref, watch } from 'vue';
-import { RouterLink, useRoute } from 'vue-router';
-import { checkShopDomains, getShop, updateShop } from '@/api/shops';
+import { RouterLink, useRoute, useRouter } from 'vue-router';
+import { checkShopDomains, deleteShop, getShop, updateShop } from '@/api/shops';
 import type { DomainCheckDto } from '@/api/types';
 import PageLayout from '@/components/PageLayout.vue';
 import { ApiError, messageForApiError } from '@/lib/errors';
 
 const route = useRoute();
+const router = useRouter();
 const toast = useBToast();
 const queryClient = useQueryClient();
 
@@ -23,6 +24,7 @@ const customDomain = ref('');
 const domainPending = ref(false);
 const togglePending = ref(false);
 const checkPending = ref(false);
+const deletePending = ref(false);
 const domainCheck = ref<DomainCheckDto | null>(null);
 
 const currentAddress = computed(() =>
@@ -94,6 +96,41 @@ async function onToggleActive(): Promise<void> {
     toast.add({ message, severity: 'failure' });
   } finally {
     togglePending.value = false;
+  }
+}
+
+async function onDelete(): Promise<void> {
+  if (!shop.value) return;
+
+  const confirmed = window.confirm(
+    `Excluir "${shop.value.name}"? O domínio sai do ar, o DNS é removido do Cloudflare e o slug fica livre para reuso. Os dados são mantidos no banco.`,
+  );
+  if (!confirmed) return;
+
+  deletePending.value = true;
+  try {
+    const deleted = await deleteShop(shopId.value);
+    await queryClient.invalidateQueries({ queryKey: ['shops'] });
+
+    if (deleted.dnsRecord === 'deleted' || deleted.dnsRecord === 'missing') {
+      toast.add({ message: 'Barbearia excluída e DNS removido.', severity: 'success' });
+    } else if (deleted.dnsRecord === 'failed') {
+      toast.add({ message: 'Barbearia excluída.', severity: 'success' });
+      toast.add({
+        message: `Não foi possível remover o DNS de ${deleted.domain}. Remova o registro manualmente no Cloudflare.`,
+        severity: 'warning',
+      });
+    } else {
+      toast.add({ message: 'Barbearia excluída.', severity: 'success' });
+    }
+
+    await router.push('/shops');
+  } catch (error) {
+    const message =
+      error instanceof ApiError ? messageForApiError(error) : 'Não foi possível excluir.';
+    toast.add({ message, severity: 'failure' });
+  } finally {
+    deletePending.value = false;
   }
 }
 
@@ -236,6 +273,22 @@ function formatDate(iso: string): string {
           @click="onToggleActive"
         >
           {{ shop.active ? 'Suspender barbearia' : 'Reativar barbearia' }}
+        </BButton>
+      </BCard>
+
+      <BCard>
+        <BText as="h2" variant="heading-3" class="detail__section-title">Excluir</BText>
+        <BText as="p" variant="body-2" color="b-fg-neutral-secondary" class="detail__danger-text">
+          Excluir tira o domínio do ar, remove o registro DNS do Cloudflare e libera o slug para
+          reuso. Os dados são mantidos no banco, mas a barbearia some do CRM.
+        </BText>
+        <BButton
+          color="danger"
+          :is-loading="deletePending"
+          :is-disabled="deletePending"
+          @click="onDelete"
+        >
+          Excluir barbearia
         </BButton>
       </BCard>
     </template>

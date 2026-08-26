@@ -1,5 +1,11 @@
 import { apiRequest } from '@/api/client';
-import type { CreatedShopDto, DomainCheckDto, ShopDto, ShopWithStatsDto } from '@/api/types';
+import type {
+  CreatedShopDto,
+  DeletedShopDto,
+  DomainCheckDto,
+  ShopDto,
+  ShopWithStatsDto,
+} from '@/api/types';
 
 export type CreateShopInput = {
   name: string;
@@ -32,6 +38,10 @@ export function createShop(input: CreateShopInput): Promise<CreatedShopDto> {
 
 export function updateShop(id: string, input: UpdateShopInput): Promise<ShopDto> {
   return apiRequest<ShopDto>(`/platform/shops/${id}`, { method: 'PATCH', body: input });
+}
+
+export function deleteShop(id: string): Promise<DeletedShopDto> {
+  return apiRequest<DeletedShopDto>(`/platform/shops/${id}`, { method: 'DELETE' });
 }
 
 export function checkShopDomains(id: string): Promise<DomainCheckDto> {
