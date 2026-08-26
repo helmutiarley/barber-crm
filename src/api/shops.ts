@@ -1,5 +1,5 @@
 import { apiRequest } from '@/api/client';
-import type { DomainCheckDto, ShopDto, ShopWithStatsDto } from '@/api/types';
+import type { CreatedShopDto, DomainCheckDto, ShopDto, ShopWithStatsDto } from '@/api/types';
 
 export type CreateShopInput = {
   name: string;
@@ -26,8 +26,8 @@ export function getShop(id: string): Promise<ShopWithStatsDto> {
   return apiRequest<ShopWithStatsDto>(`/platform/shops/${id}`);
 }
 
-export function createShop(input: CreateShopInput): Promise<ShopDto> {
-  return apiRequest<ShopDto>('/platform/shops', { method: 'POST', body: input });
+export function createShop(input: CreateShopInput): Promise<CreatedShopDto> {
+  return apiRequest<CreatedShopDto>('/platform/shops', { method: 'POST', body: input });
 }
 
 export function updateShop(id: string, input: UpdateShopInput): Promise<ShopDto> {

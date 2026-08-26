@@ -59,7 +59,17 @@ async function onSubmit(): Promise<void> {
       },
     });
     await queryClient.invalidateQueries({ queryKey: ['shops'] });
-    toast.add({ message: 'Barbearia criada.', severity: 'success' });
+    if (created.dnsRecord === 'created' || created.dnsRecord === 'exists') {
+      toast.add({ message: 'Barbearia criada e DNS configurado.', severity: 'success' });
+    } else if (created.dnsRecord === 'failed') {
+      toast.add({ message: 'Barbearia criada.', severity: 'success' });
+      toast.add({
+        message: `Não foi possível criar o DNS de ${created.domain} automaticamente. Adicione o registro manualmente.`,
+        severity: 'warning',
+      });
+    } else {
+      toast.add({ message: 'Barbearia criada.', severity: 'success' });
+    }
     await router.push(`/shops/${created.id}`);
   } catch (error) {
     const message =

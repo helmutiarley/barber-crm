@@ -29,6 +29,12 @@ export type ShopWithStatsDto = ShopDto & {
   appointments: number;
 };
 
+export type DnsRecordStatus = 'created' | 'exists' | 'failed' | 'skipped';
+
+export type CreatedShopDto = ShopDto & {
+  dnsRecord: DnsRecordStatus;
+};
+
 export type DomainCheckResult = {
   domain: string;
   kind: 'default' | 'custom';
