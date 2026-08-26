@@ -1,0 +1,15 @@
+:root {
+  --header-height: 64px;
+  --page-max-width: 1024px;
+}
+
+html,
+body,
+#app {
+  height: 100%;
+}
+
+body {
+  overflow: hidden;
+  font-family: 'DM Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+}
