@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { BButton, BIcon, BText } from '@barber/bcomponents';
+import { BButton, BIcon, BText } from '@/ui';
 import { RouterLink, RouterView, useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
 

@@ -6,7 +6,7 @@ barbearias (tenants) servidas pelo barber-backend multi-tenant.
 ## Stack
 
 - Vue 3 + Vite + TypeScript, mesmo esqueleto do barber-frontend
-- `@barber/bcomponents` vendorado em `packages/` (workspaces npm)
+- UI kit próprio em `src/ui`, espelhado do barber-frontend (sem dependência de terceiros)
 - TanStack Query + Pinia + vue-router
 - Servido por nginx em produção (ver `Dockerfile`), atrás do Caddy em
   `crm.barbearia360.app` (prod) / `crm.barbearia360.dev` (staging)
@@ -27,7 +27,6 @@ O backend precisa estar rodando com um usuário `SUPER_ADMIN` (o seed cria
 - `npm run typecheck` — vue-tsc
 - `npm test` — vitest
 - `npm run build` — build de produção
-- `npm run vendor:bcomponents` — re-vendora os pacotes de UI
 
 ## Deploy
 
