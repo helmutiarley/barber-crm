@@ -147,7 +147,7 @@ function formatDate(iso: string): string {
 }
 
 .shops__domain a {
-  color: var(--b-fg-brand-primary, #1d4ed8);
+  color: var(--b-fg-brand-default);
   text-decoration: underline;
 }
 

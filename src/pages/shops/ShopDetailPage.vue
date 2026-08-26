@@ -325,7 +325,7 @@ function formatDate(iso: string): string {
   gap: var(--b-spacing-sm);
   margin-top: var(--b-spacing-sm);
   padding-top: var(--b-spacing-sm);
-  border-top: 1px solid var(--b-border-neutral-subtle, #e5e7eb);
+  border-top: 1px solid var(--b-stroke-subtle);
 }
 
 .detail__check-domain {
@@ -348,7 +348,7 @@ function formatDate(iso: string): string {
 }
 
 .detail__link {
-  color: var(--b-fg-brand-primary, #1d4ed8);
+  color: var(--b-fg-brand-default);
   text-decoration: underline;
 }
 
